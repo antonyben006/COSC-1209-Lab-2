@@ -62,8 +62,8 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
     
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+    - name: Update Gradle Wrapper
+      run: ./gradlew wrapper --gradle-version=7.6 --no-daemon
     
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon --stacktrace
+      run: ./gradlew build --no-daemon
