@@ -1,76 +1,46 @@
-name: COSC 1209 CI/CD Pipeline
-
+name: Java CI with Gradle
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "develop" ]
-  workflow_dispatch:
-
+    branches: [ "main" ]
 jobs:
-  welcome-message:
-    name: Welcome Message
-    runs-on: ubuntu-latest
-    steps:
-    - name: Echo Welcome Message
-      run: echo "Hi, I am from COSC 1209 class"
-
-  multi-os-build:
-    name: Multi-OS Build
-    needs: welcome-message
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        java-version: ['11']
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Display OS Information
-      run: |
-        echo "Running on: ${{ matrix.os }}"
-        echo "Java Version: ${{ matrix.java-version }}"
-    
-    - name: Set up JDK ${{ matrix.java-version }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ matrix.java-version }}
-        distribution: 'temurin'
-    
-    - name: Display Java Version
-      run: java -version
-
-  gradle-build:
-    name: Gradle Build and Test
-    needs: multi-os-build
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
+    - uses: actions/checkout@v4
     - name: Set up JDK 11
       uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'temurin'
-    
-    - name: Install Gradle 7.6 directly
+    - name: Update Gradle wrapper
       run: |
-        echo "Installing fresh Gradle 7.6..."
-        wget -q https://services.gradle.org/distributions/gradle-7.6-bin.zip
-        unzip -q gradle-7.6-bin.zip
-        export PATH=$PWD/gradle-7.6/bin:$PATH
-        gradle --version
-        echo "GRADLE_HOME=$PWD/gradle-7.6" >> $GITHUB_ENV
-        echo "$PWD/gradle-7.6/bin" >> $GITHUB_PATH
-    
-    - name: Build with fresh Gradle installation
+        sed -i 's/gradle-6.0-bin.zip/gradle-7.6-bin.zip/' gradle/wrapper/gradle-wrapper.properties
+        cat gradle/wrapper/gradle-wrapper.properties
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
+    - name: Build with Gradle Wrapper
+      run: ./gradlew build
+  dependency-submission:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    - name: Update Gradle wrapper
       run: |
-        echo "Building with Gradle 7.6..."
-        gradle clean build -x test
-        echo "✅ Gradle build completed successfully!"
+        sed -i 's/gradle-6.0-bin.zip/gradle-7.6-bin.zip/' gradle/wrapper/gradle-wrapper.properties
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+    - name: Generate and submit dependency graph
+      uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582
