@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        java-version: ['17']
+        java-version: ['11']
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -62,8 +62,5 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
     
-    - name: Update Gradle Wrapper
-      run: ./gradlew wrapper --gradle-version=7.6 --no-daemon
-    
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon
+      run: ./gradlew clean build --no-daemon
